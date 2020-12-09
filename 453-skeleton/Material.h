@@ -12,6 +12,7 @@ struct ObjectMaterial {
 	glm::vec3 diffuse;
 	glm::vec3 specular;
 	glm::vec3 reflectionStrength;
+	glm::vec3 refractionStrength;
 	float specularCoefficient = 0;
 
 	ObjectMaterial()
@@ -19,6 +20,7 @@ struct ObjectMaterial {
 		, diffuse(0, 0, 0)
 		, specular(0, 0, 0)
 		, reflectionStrength(0, 0, 0)
+		, refractionStrength(0, 0, 0)
 	{}
 };
 

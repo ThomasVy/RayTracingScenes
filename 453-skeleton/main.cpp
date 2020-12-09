@@ -8,6 +8,7 @@
 #include <string>
 
 #include <glm/gtx/vector_query.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 
 #include "Geometry.h"
 #include "GLDebug.h"
@@ -78,7 +79,7 @@ glm::vec3 raytraceSingleRay(Scene const &scene, Ray const &ray, int depth, int s
 	phong.intersection = result;
 
 	glm::vec3 reflectColor(0);
-
+	glm::vec3 transmitColor(0);
 	if (depth < 1 || result.numberOfIntersections == 0)
 	{
 		glm::vec3(0, 0, 0);
@@ -93,13 +94,26 @@ glm::vec3 raytraceSingleRay(Scene const &scene, Ray const &ray, int depth, int s
 		}
 		else
 		{
-			glm::vec3 reflectedDir = glm::normalize(2 * glm::dot(result.normal, -ray.direction) * result.normal + ray.direction);
-			Ray reflectedRay(result.point, reflectedDir);
-			reflectColor = phong.material.reflectionStrength * raytraceSingleRay(scene, reflectedRay, depth - 1, result.id);
+			if (phong.material.reflectionStrength != vec3(0))
+			{
+				glm::vec3 reflectedDir = glm::normalize(2 * glm::dot(result.normal, -ray.direction) * result.normal + ray.direction);
+				Ray reflectedRay(result.point, reflectedDir);
+				reflectColor = phong.material.reflectionStrength * raytraceSingleRay(scene, reflectedRay, depth - 1, result.id);
+			}
+
+			if (phong.material.refractionStrength != vec3(0))
+			{
+				float lightAngle = std::acos(glm::dot(result.normal, -ray.direction));
+				float transmitAngle = std::asin(phong.material.refractionStrength.x* std::sin(lightAngle));
+				glm::vec3 axis = glm::cross(-ray.direction, result.normal);
+				glm::vec3 transmitDir = glm::rotate(ray.direction, transmitAngle - lightAngle, axis);
+				Ray transmitRay(result.point, transmitDir);
+				transmitColor = raytraceSingleRay(scene, transmitRay, depth - 1, result.id);
+			}
 		}
 	}
 
-	return phong.I() + reflectColor;
+	return phong.I() + reflectColor + transmitColor;
 }
 
 struct RayAndPixel {
@@ -173,17 +187,33 @@ public:
 
 		if (key == GLFW_KEY_1 && action == GLFW_PRESS) {
 			scene = initScene1();
+			sceneNum = 1;
 			raytraceImage(scene, outputImage, viewPoint);
 		}
 
 		if (key == GLFW_KEY_2 && action == GLFW_PRESS) {
 			scene = initScene2();
+			sceneNum = 2;
+			raytraceImage(scene, outputImage, viewPoint);
+		}
+
+		if (key == GLFW_KEY_UP && action == GLFW_PRESS)
+		{
+			refractionToggle = !refractionToggle;
+			if (sceneNum == 1)
+			{
+				scene = initScene1(refractionToggle);
+			}
+			else
+			{
+				scene = initScene2(refractionToggle);
+			}
 			raytraceImage(scene, outputImage, viewPoint);
 		}
 	}
-
 	bool shouldQuit = false;
-
+	int sceneNum = 1;
+	bool refractionToggle = false;
 	ImageBuffer outputImage;
 	Scene scene;
 	glm::vec3 viewPoint;

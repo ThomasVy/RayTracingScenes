@@ -19,6 +19,6 @@ struct Scene {
 };
 
 
-Scene initScene1();
-Scene initScene2();
+Scene initScene1(bool refraction = false);
+Scene initScene2(bool refraction = false);
 

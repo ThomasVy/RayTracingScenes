@@ -251,7 +251,7 @@ vec3 back_wall2[]{
 		vec3(-10, -1, -12)
 };
 
-Scene initScene1() {
+Scene initScene1(bool refraction) {
 	//Scene 1
 	Scene scene1;
 
@@ -305,6 +305,19 @@ Scene initScene1() {
 	backWall->material.diffuse = vec3(1.0, 1.0, 1.0);
 	scene1.shapesInScene.push_back(backWall);
 
+	if (refraction)
+	{
+		std::shared_ptr<Sphere> sphere2 = std::make_shared<Sphere>(
+			vec3(-0.9, -1.925, -5.6), 0.825, 8
+			);
+		sphere2->material.diffuse = vec3(0.6, 0.6, 0.6);
+		sphere2->material.specular = 1.0f * sphere2->material.diffuse;
+		sphere2->material.specularCoefficient = 64;
+		sphere2->material.refractionStrength = vec3(0.6);
+
+		scene1.shapesInScene.push_back(sphere2);
+	}
+
 	scene1.lightPosition = vec3(0,2.5,-7.75);
 
 	scene1.lightColor = vec3(1,1,1);
@@ -312,7 +325,7 @@ Scene initScene1() {
 	return scene1;
 }
 
-Scene initScene2() {
+Scene initScene2(bool refraction) {
 	//Scene 2
 	Scene scene2;
 	std::shared_ptr<Triangles> Icosahedron = std::make_shared<Triangles>();
@@ -371,6 +384,20 @@ Scene initScene2() {
 	backWallTwo->material.specular = backWallTwo->material.diffuse;
 	backWallTwo->material.specularCoefficient = 8;
 	scene2.shapesInScene.push_back(backWallTwo);
+
+
+	if (refraction)
+	{
+		std::shared_ptr<Sphere> sphere5 = std::make_shared<Sphere>(
+			vec3(0.0, -0.5, -2), 0.4, 3
+			);
+		sphere5->material.diffuse = vec3(0.6, 0.6, 0.6);
+		sphere5->material.specular = 1.0f * sphere2->material.diffuse;
+		sphere5->material.specularCoefficient = 64;
+		sphere5->material.refractionStrength = vec3(0.6);
+
+		scene2.shapesInScene.push_back(sphere5);
+	}
 
 	scene2.lightPosition = vec3(4, 6, -1);
 	scene2.lightColor = vec3(1,1,1);
