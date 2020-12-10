@@ -1,7 +1,7 @@
 #include <iostream>
 #include <glm/common.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <glm/gtx/rotate_vector.hpp>
 #include "RayTrace.h"
 
 
@@ -12,6 +12,14 @@ Sphere::Sphere(vec3 c, float r, int ID){
 	centre = c;
 	radius = r;
 	id = ID;
+}
+
+glm::vec3 transmitRay(const glm::vec3& normal, const glm::vec3& rayDirection, const float n)
+{
+	float lightAngle = std::acos(glm::dot(normal, rayDirection));
+	float transmitAngle = std::asin(n * std::sin(lightAngle));
+	glm::vec3 axis = glm::normalize(glm::cross(normal, rayDirection));
+	return glm::normalize(glm::rotate(normal, transmitAngle, axis));
 }
 
 //------------------------------------------------------------------------------
@@ -47,10 +55,25 @@ Intersection Sphere::getIntersection(Ray ray){
 	}
 	else
 	{
-		i.numberOfIntersections = 1;
+		i.numberOfIntersections = 2;
 		float t = -glm::dot(ray.direction, D) - sqrt(discriminant);
-		i.point = ray.origin + t * ray.direction; 
-		i.normal = glm::normalize(i.point-this->centre);
+		i.entryPoint = ray.origin + t * ray.direction;
+		i.entryNormal = glm::normalize(i.entryPoint - this->centre);
+
+		D = i.entryPoint - this->centre;
+		glm::vec3 transmitDir = transmitRay(-i.entryNormal, ray.direction, 1.0 / material.indexOfRefraction);
+		discriminant = pow(glm::dot(transmitDir, D), 2) - pow(glm::length(D), 2) + pow(this->radius, 2);
+		if (discriminant < 0)
+		{
+			i.exitPoint = i.entryPoint ;
+			i.exitNormal = i.entryNormal;
+		}
+		else
+		{
+			t = -glm::dot(transmitDir, D) + sqrt(discriminant);
+			i.exitPoint = i.entryPoint + t * transmitDir;
+			i.exitNormal = glm::normalize(i.exitPoint - this->centre);
+		}
 	}
 	return i;
 }
@@ -110,8 +133,8 @@ Intersection Triangles::intersectTriangle(Ray ray, Triangle triangle){
 	// ray intersection
 	if (t > EPSILON) {
 		Intersection p;
-		p.point = ray.origin + ray.direction * t;
-		p.normal = glm::normalize(glm::cross(edge1, edge2));
+		p.entryPoint = ray.origin + ray.direction * t;
+		p.entryNormal = glm::normalize(glm::cross(edge1, edge2));
 		p.material = material;
 		p.numberOfIntersections = 1;
 		p.id = id;
@@ -129,11 +152,11 @@ Intersection Triangles::getIntersection(Ray ray){
 	result.id = id;
 	float min = 9999;
 	result = intersectTriangle(ray, triangles.at(0));
-	if(result.numberOfIntersections!=0)min = glm::distance(result.point, ray.origin);
+	if(result.numberOfIntersections!=0)min = glm::distance(result.entryPoint, ray.origin);
 	for(int i = 1; i<triangles.size() ;i++){
 		Intersection p = intersectTriangle(ray, triangles.at(i));
-		if(p.numberOfIntersections !=0 && glm::distance(p.point, ray.origin) < min){
-			min = glm::distance(p.point, ray.origin);
+		if(p.numberOfIntersections !=0 && glm::distance(p.entryPoint, ray.origin) < min){
+			min = glm::distance(p.entryPoint, ray.origin);
 			result = p;
 		}
 	}
@@ -147,12 +170,12 @@ Intersection Plane::getIntersection(Ray ray){
 	Intersection result;
 	result.material = material;
 	result.id = id;
-	result.normal = normal;
+	result.entryNormal = normal;
 	if(dot(normal, ray.direction)>=0)return result;
 	float s = dot(point - ray.origin, normal)/dot(ray.direction, normal);
 	//if(s<0.00001)return result;
 	result.numberOfIntersections = 1;
-	result.point = ray.origin + s*ray.direction;
+	result.entryPoint = ray.origin + s*ray.direction;
 	return result;
 }
 

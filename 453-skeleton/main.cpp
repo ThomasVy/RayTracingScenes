@@ -33,8 +33,8 @@ int hasIntersection(Scene const &scene, Ray ray, int skipID){
 		if(
 			shape->id != skipID
 			&& tmp.numberOfIntersections!=0
-			&& glm::distance(tmp.point, ray.origin) > 0.00001
-			&& glm::distance(tmp.point, ray.origin) < glm::distance(ray.origin, scene.lightPosition) - 0.01
+			&& glm::distance(tmp.entryPoint, ray.origin) > 0.00001
+			&& glm::distance(tmp.entryPoint, ray.origin) < glm::distance(ray.origin, scene.lightPosition) - 0.01
 		){
 			return tmp.id;
 		}
@@ -52,7 +52,7 @@ Intersection getClosestIntersection(Scene const &scene, Ray ray, int skipID){ //
 			continue;
 		}
 		Intersection p = shape->getIntersection(ray);
-		float distance = glm::distance(p.point, ray.origin);
+		float distance = glm::distance(p.entryPoint, ray.origin);
 		if(p.numberOfIntersections !=0 && distance < min){
 			min = distance;
 			closestIntersection = p;
@@ -60,7 +60,6 @@ Intersection getClosestIntersection(Scene const &scene, Ray ray, int skipID){ //
 	}
 	return closestIntersection;
 }
-
 
 glm::vec3 raytraceSingleRay(Scene const &scene, Ray const &ray, int depth, int source_id) {
 	// TODO: Part 3: Somewhere in this function you will need to add the code to determine
@@ -86,7 +85,7 @@ glm::vec3 raytraceSingleRay(Scene const &scene, Ray const &ray, int depth, int s
 	}
 	else //intersects an object
 	{
-		Ray shadowRay(result.point, glm::normalize(scene.lightPosition - result.point));
+		Ray shadowRay(result.entryPoint, glm::normalize(scene.lightPosition - result.entryPoint));
 		if (hasIntersection(scene, shadowRay, result.id) != -1)
 		{
 			phong.material.diffuse = glm::vec3(0);
@@ -96,19 +95,17 @@ glm::vec3 raytraceSingleRay(Scene const &scene, Ray const &ray, int depth, int s
 		{
 			if (phong.material.reflectionStrength != vec3(0))
 			{
-				glm::vec3 reflectedDir = glm::normalize(2 * glm::dot(result.normal, -ray.direction) * result.normal + ray.direction);
-				Ray reflectedRay(result.point, reflectedDir);
+				glm::vec3 reflectedDir = glm::normalize(2 * glm::dot(result.entryNormal, -ray.direction) * result.entryNormal + ray.direction);
+				Ray reflectedRay(result.entryPoint, reflectedDir);
 				reflectColor = phong.material.reflectionStrength * raytraceSingleRay(scene, reflectedRay, depth - 1, result.id);
 			}
 
-			if (phong.material.refractionStrength != vec3(0))
+			if (phong.material.indexOfRefraction != 0)
 			{
-				float lightAngle = std::acos(glm::dot(result.normal, -ray.direction));
-				float transmitAngle = std::asin(phong.material.refractionStrength.x* std::sin(lightAngle));
-				glm::vec3 axis = glm::cross(-ray.direction, result.normal);
-				glm::vec3 transmitDir = glm::rotate(ray.direction, transmitAngle - lightAngle, axis);
-				Ray transmitRay(result.point, transmitDir);
-				transmitColor = raytraceSingleRay(scene, transmitRay, depth - 1, result.id);
+				glm::vec3 transmitDir1 = glm::normalize(result.exitPoint - result.entryPoint);
+				glm::vec3 transmitDir2 = transmitRay(result.exitNormal, transmitDir1, result.material.indexOfRefraction);
+				Ray refractRay(result.exitPoint, transmitDir2);
+				transmitColor = raytraceSingleRay(scene, refractRay, depth - 1, result.id);
 			}
 		}
 	}
@@ -188,16 +185,18 @@ public:
 		if (key == GLFW_KEY_1 && action == GLFW_PRESS) {
 			scene = initScene1();
 			sceneNum = 1;
+			refractionToggle = false;
 			raytraceImage(scene, outputImage, viewPoint);
 		}
 
 		if (key == GLFW_KEY_2 && action == GLFW_PRESS) {
 			scene = initScene2();
 			sceneNum = 2;
+			refractionToggle = false;
 			raytraceImage(scene, outputImage, viewPoint);
 		}
 
-		if (key == GLFW_KEY_UP && action == GLFW_PRESS)
+		if (key == GLFW_KEY_T && action == GLFW_PRESS)
 		{
 			refractionToggle = !refractionToggle;
 			if (sceneNum == 1)

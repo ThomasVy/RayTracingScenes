@@ -313,7 +313,7 @@ Scene initScene1(bool refraction) {
 		sphere2->material.diffuse = vec3(0.6, 0.6, 0.6);
 		sphere2->material.specular = 1.0f * sphere2->material.diffuse;
 		sphere2->material.specularCoefficient = 64;
-		sphere2->material.refractionStrength = vec3(0.6);
+		sphere2->material.indexOfRefraction = 3;
 
 		scene1.shapesInScene.push_back(sphere2);
 	}
@@ -389,12 +389,12 @@ Scene initScene2(bool refraction) {
 	if (refraction)
 	{
 		std::shared_ptr<Sphere> sphere5 = std::make_shared<Sphere>(
-			vec3(0.0, -0.5, -2), 0.4, 3
+			vec3(0.0, -0.5, -2.5), 0.4, 8
 			);
 		sphere5->material.diffuse = vec3(0.6, 0.6, 0.6);
-		sphere5->material.specular = 1.0f * sphere2->material.diffuse;
+		sphere5->material.specular = 1.0f * sphere5->material.diffuse;
 		sphere5->material.specularCoefficient = 64;
-		sphere5->material.refractionStrength = vec3(0.6);
+		sphere5->material.indexOfRefraction = 3;
 
 		scene2.shapesInScene.push_back(sphere5);
 	}

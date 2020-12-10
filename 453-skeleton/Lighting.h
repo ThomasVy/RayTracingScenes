@@ -24,8 +24,8 @@ struct PhongReflection {
 
 	// Helper methods to name things the same as lecture
 	glm::vec3 l() const { return glm::normalize(scene.lightPosition - p()); } // light vector
-	glm::vec3 n() const { return glm::normalize(intersection.normal); } // normal
-	glm::vec3 p() const { return intersection.point; } // point
+	glm::vec3 n() const { return glm::normalize(intersection.entryNormal); } // normal
+	glm::vec3 p() const { return intersection.entryPoint; } // point
 	glm::vec3 v() const { return glm::normalize(ray.origin - p()); } // view direction
 	glm::vec3 r() const { return -glm::reflect(l(), n()); } // reflected light vector
 

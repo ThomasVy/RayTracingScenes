@@ -37,19 +37,15 @@ struct Ray {
 
 struct Intersection{
 	int numberOfIntersections;
-	vec3 point;
-	vec3 normal;
+	vec3 entryPoint;
+	vec3 exitPoint;
+	vec3 entryNormal;
+	vec3 exitNormal;
 	int id;
 
 	ObjectMaterial material;
 
-	Intersection(int no, vec3 n, vec3 f, vec3 nor, int ID){
-		numberOfIntersections = no;
-		point = n;
-		normal = nor;
-		id = ID;
-	}
-	Intersection(): numberOfIntersections(0), point(0,0,0), normal(0,0,0), id(-1), material()
+	Intersection(): numberOfIntersections(0), entryPoint(0,0,0), exitPoint(0,0,0), entryNormal(0,0,0), exitNormal(0, 0, 0), id(-1), material()
 	{}
 };
 
@@ -102,3 +98,4 @@ public:
 	Intersection getIntersection(Ray ray);
 };
 
+glm::vec3 transmitRay(const glm::vec3& normal, const glm::vec3& rayDirection, const float n);
