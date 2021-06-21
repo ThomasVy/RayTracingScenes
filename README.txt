@@ -1,7 +1,4 @@
 Thomas Vy
-30000789
-CPSC 453
-Assignment 5
 
 Bonus Part 2 completed - look below for controls. 
 
