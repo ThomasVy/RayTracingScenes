@@ -1,7 +1,5 @@
 Thomas Vy
 
-Bonus Part 2 completed - look below for controls. 
-
 IDE: Visual Studio
 OS: Windows 10
 
